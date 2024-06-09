@@ -1,0 +1,880 @@
+mistrai ai
+//менять цвет полигонов(имя)
+    // polygons[133].color = {r:255,g:255,b:255}
+////////////////////////////
+
+//делать дырку
+        // polygons[133].visibility = false;
+////////////////////////
+
+ГРАДИЕНТ(в фигуру)
+сделал дельту,потом цикл и в этот цикл и эту дельту умнажал на i
+после того как полигоны нарисовались(в конец крч)
+        const delta = 255 / polygons.length;
+        for (let i = 0; i < polygons.length; i++) {
+            polygons[i].color = {r:Math.floor(delta*i), g: Math.floor(delta * 2* i), b: Math.floor(250) }
+        }
+//////////////////////
+
+РАДУГА(МОЯ)(в фигуру)
+ // const rainbowColors = [
+        //     {r: 255, g: 0, b: 0},     // Красный
+        //     {r: 255, g: 127, b: 0},   // Оранжевый
+        //     {r: 255, g: 255, b: 0},   // Желтый
+        //     {r: 0, g: 255, b: 0},     // Зеленый
+        //     {r: 0, g: 0, b: 255},     // Голубой
+        //     {r: 75, g: 0, b: 130},    // Синий
+        //     {r: 148, g: 0, b: 211}    // Фиолетовый
+        // ];
+        
+        // for (let i = 0; i < polygons.length; i++) {
+        //     const colorIndex = i % rainbowColors.length;
+        //     polygons[i].color = rainbowColors[colorIndex];
+        // }
+///////////////////////
+
+ШАХМАТЫ(элипс)(в фигуру)
+if(i%2==0)
+            polygons.push(new Polygon([
+                0,
+                i * (horizontalEdgeCount - 1) + 1,
+                (i + 1) % verticalEdgeCount * (horizontalEdgeCount - 1) + 1
+            ], color));
+            else
+            polygons.push(new Polygon([
+                0,
+                i * (horizontalEdgeCount - 1) + 1,
+                (i + 1) % verticalEdgeCount * (horizontalEdgeCount - 1) + 1
+            ], 'black'));
+            for (let j = 1; j < horizontalEdgeCount - 1; j++) {
+                if((i+j)%2==0)
+                polygons.push(new Polygon([
+                    j + i * (horizontalEdgeCount - 1),
+                    j + i * (horizontalEdgeCount - 1) + 1,
+                    (i + 1) % verticalEdgeCount * (horizontalEdgeCount - 1) + j + 1,
+                    (i + 1) % verticalEdgeCount * (horizontalEdgeCount - 1) + j
+                ], color));
+                else{
+                    polygons.push(new Polygon([
+                        j + i * (horizontalEdgeCount - 1),
+                        j + i * (horizontalEdgeCount - 1) + 1,
+                        (i + 1) % verticalEdgeCount * (horizontalEdgeCount - 1) + j + 1,
+                        (i + 1) % verticalEdgeCount * (horizontalEdgeCount - 1) + j
+                    ], 'black'));
+                }
+            }
+            if(i%2==0)
+            polygons.push(new Polygon([
+                (horizontalEdgeCount - 1) * ((i + 1) % verticalEdgeCount + 1),
+                (horizontalEdgeCount - 1) * (i + 1),
+                (horizontalEdgeCount - 1) * verticalEdgeCount + 1
+            ], color));
+//////////////////////////////
+
+ШАХМАТЫ(цилиндр)
+import { Point, Edge, Polygon, Surface } from "../entities";
+
+class Cylinder extends Surface {
+    constructor(
+        radius: number = 5,
+        height: number = 10,
+        color: string = 'ffffff',
+        center: Point = new Point(),
+        verticalSegments: number = 20,
+        horizontalSegments: number = 20
+    ) {
+        const vertices: Point[] = [];
+        const edges: Edge[] = [];
+        const polygons: Polygon[] = [];
+
+        const halfHeight = height / 2;
+
+        // Vertices
+        for (let i = 0; i <= verticalSegments; i++) {
+            const theta = (i * 2 * Math.PI) / verticalSegments;
+            const sinTheta = Math.sin(theta);
+            const cosTheta = Math.cos(theta);
+
+            for (let j = 0; j <= horizontalSegments; j++) {
+                const phi = (j * Math.PI * 2) / horizontalSegments;
+                const x = radius * Math.cos(phi) + center.x;
+                const y = halfHeight - (i / verticalSegments) * height + center.y;
+                const z = radius * Math.sin(phi) + center.z;
+                vertices.push(new Point(x, y, z));
+            }
+        }
+
+        // Edges
+        for (let i = 0; i < verticalSegments; i++) {
+            for (let j = 0; j < horizontalSegments; j++) {
+                const a = i * (horizontalSegments + 1) + j;
+                const b = a + horizontalSegments + 1;
+                const c = a + 1;
+                const d = b + 1;
+
+                edges.push(new Edge(a, b));
+                edges.push(new Edge(b, d));
+                edges.push(new Edge(d, c));
+                edges.push(new Edge(c, a));
+            }
+        }
+
+        // Side polygons with checkerboard pattern
+        for (let i = 0; i < verticalSegments; i++) {
+            for (let j = 0; j < horizontalSegments; j++) {
+                const a = i * (horizontalSegments + 1) + j;
+                const b = a + horizontalSegments + 1;
+                const c = a + 1;
+                const d = b + 1;
+
+                // Determine color based on checkerboard pattern
+                const polygonColor = ((i + j) % 2 === 0) ? color : 'black';
+
+                polygons.push(new Polygon([a, b, d, c], polygonColor));
+            }
+        }
+
+        // Top and bottom polygons
+        const topCenter = new Point(center.x, center.y + halfHeight, center.z);
+        const bottomCenter = new Point(center.x, center.y - halfHeight, center.z);
+
+        for (let i = 0; i < verticalSegments; i++) {
+            const a = i * (horizontalSegments + 1);
+            const b = (i + 1) * (horizontalSegments + 1);
+            polygons.push(new Polygon([a, b, b + 1, a + 1], color)); // Top polygon
+            polygons.push(new Polygon([a, a + 1, b + 1, b], color)); // Bottom polygon
+        }
+
+        super(vertices, edges, polygons, center);
+    }
+}
+
+export default Cylinder;
+
+//////////////////////////////////////
+
+ШАХМАТЫ(конус)
+import { Point, Edge, Polygon, Surface } from "../entities";
+
+class Cone extends Surface {
+    constructor(
+        radius: number = 2.5,
+        height: number = 5,
+        color: string = '#00ff00',
+        center: Point = new Point(),
+        verticalEdgeCount: number = 20,
+        horizontalEdgeCount: number = 9
+    ) {
+        const vertices: Point[] = [];
+        const edges: Edge[] = [];
+        const polygons: Polygon[] = [];
+
+        // Create vertices
+        vertices.push(new Point(center.x, -height / 3 + center.y, center.z));
+        for (let j = 0; j < horizontalEdgeCount; j++) {
+            const h = j / horizontalEdgeCount;
+            for (let i = 0; i < verticalEdgeCount; i++) {
+                const alpha = 2 * Math.PI * i / verticalEdgeCount;
+                vertices.push(new Point(
+                    Math.sin(alpha) * radius * (1 - h) + center.x,
+                    h * height - height / 3 + center.y,
+                    Math.cos(alpha) * radius * (1 - h) + center.z
+                ));
+            }
+        }
+        vertices.push(new Point(center.x, 2 * height / 3 + center.y, center.z));
+
+        // Create edges
+        for (let i = 0; i < verticalEdgeCount; i++) {
+            edges.push(new Edge(0, i + 1));
+        }
+        for (let i = 0; i < verticalEdgeCount; i++) {
+            for (let j = 0; j < horizontalEdgeCount - 1; j++) {
+                edges.push(new Edge(j * verticalEdgeCount + 1 + i, (j + 1) * verticalEdgeCount + 1 + i));
+            }
+            edges.push(new Edge(verticalEdgeCount * (horizontalEdgeCount - 1) + i + 1, verticalEdgeCount * horizontalEdgeCount + 1));
+        }
+        for (let j = 0; j < horizontalEdgeCount; j++) {
+            for (let i = 0; i < verticalEdgeCount - 1; i++) {
+                edges.push(new Edge(i + 1 + j * verticalEdgeCount, i + 2 + j * verticalEdgeCount));
+            }
+            edges.push(new Edge(verticalEdgeCount + j * verticalEdgeCount, j * verticalEdgeCount + 1));
+        }
+
+        // Create polygons with checkerboard pattern
+        for (let i = 0; i < verticalEdgeCount; i++) {
+            const polygonColor = (i % 2 === 0) ? color : 'black';
+            polygons.push(new Polygon([
+                i + 1,
+                0,
+                (i + 1) % verticalEdgeCount + 1
+            ], polygonColor));
+        }
+        for (let i = 0; i < verticalEdgeCount; i++) {
+            for (let j = 0; j < horizontalEdgeCount - 1; j++) {
+                const polygonColor = ((i + j) % 2 === 0) ? color : 'black';
+                polygons.push(new Polygon([
+                    i + 1 + verticalEdgeCount * j,
+                    verticalEdgeCount * (j + 1) + i + 1,
+                    verticalEdgeCount * (j + 1) + (i + 1) % verticalEdgeCount + 1,
+                    (i + 1) % verticalEdgeCount + 1 + verticalEdgeCount * j
+                ], polygonColor));
+            }
+            const polygonColor = ((i + (horizontalEdgeCount - 1)) % 2 === 0) ? color : 'black';
+            polygons.push(new Polygon([
+                i + 1 + verticalEdgeCount * (horizontalEdgeCount - 1),
+                verticalEdgeCount * horizontalEdgeCount + 1,
+                (i + 1) % verticalEdgeCount + 1 + verticalEdgeCount * (horizontalEdgeCount - 1)
+            ], polygonColor));
+        }
+
+        super(vertices, edges, polygons, center);
+    }
+}
+
+export default Cone;
+////////////////////////////////////////
+
+ШАХМАТЫ(эллиптический цилиндр)
+import { Point, Edge, Polygon, Surface } from "../entities";
+
+class EllipticalCylinder extends Surface {
+    constructor(
+        a: number = 6,
+        b: number = 10,
+        h: number = 15,
+        count: number = 20,
+        color: string = '#00ff00',
+    ) {
+        const points: Point[] = [];
+        const edges: Edge[] = [];
+        const polygons: Polygon[] = [];
+
+        // Generate points
+        const dt = 2 * Math.PI / count;
+        for (let p = 0; p < h; p += 2) {
+            for (let i = 0; i <= Math.PI; i += 2 * dt + count) {
+                for (let j = 0; j < 2 * Math.PI; j += dt) {
+                    points.push(new Point(
+                        a * Math.cos(i) * Math.cos(j),
+                        b * Math.sin(j),
+                        p
+                    ));
+                }
+            }
+        }
+
+        // Generate edges
+        for (let i = 0; i < points.length; i++) {
+            if (i + 1 < points.length && (i + 1) % count !== 0) {
+                edges.push(new Edge(i, i + 1));
+            } else if ((i + 1) % count === 0) {
+                edges.push(new Edge(i, i + 1 - count));
+            }
+            if (i < points.length - count) {
+                edges.push(new Edge(i, i + count));
+            }
+        }
+
+        // Generate polygons with checkerboard pattern
+        for (let i = 0; i < points.length; i++) {
+            if (i + 1 + count < points.length && (i + 1) % count !== 0) {
+                const polygonColor = ((Math.floor(i / count) + i % count) % 2 === 0) ? color : 'black';
+                polygons.push(new Polygon([i, i + 1, i + 1 + count, i + count], polygonColor));
+            } else if (i + count < points.length && (i + 1) % count === 0) {
+                const polygonColor = ((Math.floor(i / count) + i % count) % 2 === 0) ? color : 'black';
+                polygons.push(new Polygon([i, i + 1 - count, i + 1, i + count], polygonColor));
+            }
+        }
+
+        super(points, edges, polygons);
+    }
+}
+
+export default EllipticalCylinder;
+/////////////////////////////////////
+ШАХМАТЫ(эллиптический параболоид)
+import { Point, Edge, Polygon, Surface } from "../entities";
+
+class EllipticalParaboloid extends Surface {
+    constructor(
+        a: number = 7,
+        b: number = 4,
+        count: number = 20,
+        color: string = '#00ff00',
+    ) {
+        const points: Point[] = [];
+        const edges: Edge[] = [];
+        const polygons: Polygon[] = [];
+
+        // Generate points
+        const dt = Math.PI * 2 / count;
+        for (let i = 0; i <= Math.PI; i += dt) {
+            for (let j = 0; j < 2 * Math.PI; j += dt) {
+                points.push(new Point(
+                    a * i * Math.cos(j),
+                    i * i,
+                    b * i * Math.sin(j)
+                ));
+            }
+        }
+
+        // Generate edges
+        for (let i = 0; i < points.length; i++) {
+            if (i + 1 < points.length && (i + 1) % count !== 0) {
+                edges.push(new Edge(i, i + 1));
+            } else if ((i + 1) % count === 0) {
+                edges.push(new Edge(i, i + 1 - count));
+            }
+            if (i < points.length - count) {
+                edges.push(new Edge(i, i + count));
+            }
+        }
+
+        // Generate polygons with checkerboard pattern
+        for (let i = 0; i < points.length; i++) {
+            if (i + 1 + count < points.length && (i + 1) % count !== 0) {
+                const polygonColor = ((Math.floor(i / count) + i % count) % 2 === 0) ? color : 'black';
+                polygons.push(new Polygon([i, i + 1, i + 1 + count, i + count], polygonColor));
+            } else if (i + count < points.length && (i + 1) % count === 0) {
+                const polygonColor = ((Math.floor(i / count) + i % count) % 2 === 0) ? color : 'black';
+                polygons.push(new Polygon([i, i + 1 - count, i + 1, i + count], polygonColor));
+            }
+        }
+
+        super(points, edges, polygons);
+    }
+}
+
+export default EllipticalParaboloid;
+//////////////////////////////////////////
+ШАХМАТЫ(гиперболический параболоид)
+import { Point, Edge, Polygon, Surface } from "../entities";
+
+class HyperbolicParaboloid extends Surface {
+    constructor(
+        count: number = 20,
+        a: number = 3,
+        b: number = 2,
+        color: string = '#00ff00',
+    ) {
+        const points: Point[] = [];
+        const edges: Edge[] = [];
+        const polygons: Polygon[] = [];
+
+        // Точки
+        for (let x = -10; x < 10; x++) {
+            for (let y = -10; y < 10; y++) {
+                points.push(new Point(
+                    x,
+                    y,
+                    x * x / (a * a) - y * y / (b * b)
+                ));
+            }
+        }
+
+        // Ребра
+        for (let i = 0; i < points.length; i++) {
+            if (i + 1 < points.length && (i + 1) % count !== 0) {
+                edges.push(new Edge(
+                    i,
+                    i + 1
+                ));
+            }
+            if (i < points.length - count) {
+                edges.push(new Edge(
+                    i,
+                    i + count
+                ));
+            }
+        }
+
+        // Полигоны (в шахматном порядке)
+        for (let i = 0; i < points.length - count; i++) {
+            if ((i % count) < count - 1) {
+                const row = Math.floor(i / count);
+                const col = i % count;
+                const isBlack = (row + col) % 2 === 0;
+                const polygonColor = isBlack ? 'black' : color;
+
+                polygons.push(new Polygon(
+                    [i, i + 1, i + 1 + count, i + count],
+                    polygonColor
+                ));
+            }
+        }
+
+        super(points, edges, polygons);
+    }
+}
+
+export default HyperbolicParaboloid;
+////////////////////////////////
+ШАХМАТЫ(однополостной гиперболоид)
+import { Point, Edge, Polygon, Surface } from "../entities";
+
+class OneSheetedHyperboloid extends Surface {
+    constructor(
+        count: number = 20,
+        a: number = 1,
+        b: number = 1,
+        c: number = 1,
+        color: string = '#00ff00',
+    ) {
+        const points: Point[] = [];
+        const edges: Edge[] = [];
+        const polygons: Polygon[] = [];
+
+        // точки
+        const dt = Math.PI * 2 / count;
+        for (let i = -Math.PI; i <= Math.PI; i += dt) {
+            for (let j = 0; j < 2 * Math.PI; j += dt) {
+                points.push(new Point(
+                    a * Math.cosh(i) * Math.cos(j),
+                    c * Math.sinh(i),
+                    b * Math.cosh(i) * Math.sin(j)
+                ));
+            }
+        }
+
+        // ребра
+        for (let i = 0; i < points.length; i++) {
+            if (i + 1 < points.length && (i + 1) % count !== 0) {
+                edges.push(new Edge(i, i + 1));
+            } else if ((i + 1) % count === 0) {
+                edges.push(new Edge(i, i + 1 - count));
+            }
+            if (i < points.length - count) {
+                edges.push(new Edge(i, i + count));
+            }
+        }
+
+        // полигоны в шахматном порядке
+        for (let i = 0; i < points.length - count; i++) {
+            if ((i % count) < count - 1) {
+                const row = Math.floor(i / count);
+                const col = i % count;
+                const isBlack = (row + col) % 2 === 0;
+                const polygonColor = isBlack ? 'black' : color;
+
+                polygons.push(new Polygon([i, i + 1, i + 1 + count, i + count], polygonColor));
+            }
+        }
+
+        super(points, edges, polygons);
+    }
+}
+
+export default OneSheetedHyperboloid;
+//////////////////////////////////////////////
+ШАХМАТЫ(сфера)
+import { Point, Edge, Polygon, Surface } from "../entities";
+
+class Sphere extends Surface {
+    constructor(
+        radius: number = 5,
+        color: string = '#00ff00', 
+        center: Point = new Point(), 
+        verticalSegments: number = 20, 
+        horizontalSegments: number = 20
+    ) {
+        const vertices: Point[] = [];
+        const edges: Edge[] = [];
+        const polygons: Polygon[] = [];
+
+        for (let i = 0; i <= verticalSegments; i++) {
+            const theta = (i * Math.PI) / verticalSegments;
+            const sinTheta = Math.sin(theta);
+            const cosTheta = Math.cos(theta);
+
+            for (let j = 0; j <= horizontalSegments; j++) {
+                const phi = (j * 2 * Math.PI) / horizontalSegments;
+                const sinPhi = Math.sin(phi);
+                const cosPhi = Math.cos(phi);
+
+                const x = radius * sinTheta * cosPhi + center.x;
+                const y = radius * cosTheta + center.y;
+                const z = radius * sinTheta * sinPhi + center.z;
+
+                vertices.push(new Point(x, y, z));
+            }
+        }
+
+        for (let i = 0; i < verticalSegments; i++) {
+            for (let j = 0; j < horizontalSegments; j++) {
+                const first = i * (horizontalSegments + 1) + j;
+                const second = first + horizontalSegments + 1;
+                
+                edges.push(new Edge(first, second));
+                edges.push(new Edge(second, first + 1));
+                edges.push(new Edge(first, first + 1));
+                edges.push(new Edge(second, second + 1));
+            }
+        }
+
+        for (let i = 0; i < verticalSegments; i++) {
+            for (let j = 0; j < horizontalSegments; j++) {
+                const first = i * (horizontalSegments + 1) + j;
+                const second = first + horizontalSegments + 1;
+
+                const row = i;
+                const col = j;
+                const isBlack = (row + col) % 2 === 0;
+                const polygonColor = isBlack ? 'black' : color;
+
+                polygons.push(new Polygon([first, second, second + 1, first + 1], polygonColor));
+            }
+        }
+
+        super(vertices, edges, polygons, center);
+    }
+}
+
+export default Sphere;
+///////////////////////////////////////
+ШАХМАТЫ(тор,бублик)
+import { Point, Edge, Polygon, Surface } from "../entities";
+
+class Torus extends Surface {
+    constructor(
+        radius: number = 2, 
+        offset: number = 5, 
+        color: string = '#00ff00', 
+        center: Point = new Point(),
+        verticalEdgeCount: number = 20,
+        horizontalEdgeCount: number = 15
+    ) {
+        const vertices: Point[] = [];
+        const edges: Edge[] = [];
+        const polygons: Polygon[] = [];
+
+        // Создание вершин
+        for (let i = 0; i < verticalEdgeCount; i++) {
+            const alpha = 2 * Math.PI * i / verticalEdgeCount;
+            for (let j = 0; j < horizontalEdgeCount; j++) {
+                const beta = 2 * Math.PI * j / horizontalEdgeCount;
+                vertices.push(new Point(
+                    radius * Math.sin(beta) * Math.cos(alpha) + offset * Math.cos(alpha) + center.x,
+                    radius * Math.cos(beta) + center.y,
+                    radius * Math.sin(alpha) * Math.sin(beta) + offset * Math.sin(alpha) + center.z
+                ));
+            }
+        }
+
+        // Создание вертикальных ребер
+        for (let i = 0; i < verticalEdgeCount; i++) {
+            for (let j = 1; j < horizontalEdgeCount; j++) {
+                edges.push(new Edge(horizontalEdgeCount * i + j - 1, horizontalEdgeCount * i + j));
+            }
+            edges.push(new Edge(horizontalEdgeCount * i, horizontalEdgeCount * (i + 1) - 1));
+        }
+
+        // Создание горизонтальных ребер
+        for (let j = 0; j < horizontalEdgeCount; j++) {
+            for (let i = 1; i < verticalEdgeCount; i++) {
+                edges.push(new Edge(horizontalEdgeCount * (i - 1) + j, horizontalEdgeCount * i + j));
+            }
+            edges.push(new Edge(j, horizontalEdgeCount * (verticalEdgeCount - 1) + j));
+        }
+
+        // Создание полигонов с шахматным узором
+        for (let i = 0; i < verticalEdgeCount; i++) {
+            for (let j = 0; j < horizontalEdgeCount; j++) {
+                const polygonColor = ((i + j) % 2 === 0) ? color : 'black';
+                polygons.push(new Polygon([
+                    j + i * horizontalEdgeCount,
+                    (j + 1) % horizontalEdgeCount + i * horizontalEdgeCount,
+                    (j + 1) % horizontalEdgeCount + (i + 1) % verticalEdgeCount * horizontalEdgeCount,
+                    j + (i + 1) % verticalEdgeCount * horizontalEdgeCount
+                ], polygonColor));
+            }
+        }
+
+        super(vertices, edges, polygons, center);
+    }
+}
+
+export default Torus;
+
+
+//////////////////////////////////////
+ШАХМАТЫ(двуполостной гиперболоид(с дыркой))
+import { Point, Edge, Polygon, Surface } from "../entities";
+
+class twoSheetedHyperboloid extends Surface {
+    constructor(
+        count: number = 20,
+        a: number = 1,
+        b: number = 1,
+        c: number = 1, 
+    ){
+        const points: Point[] = [];
+        const edges: Edge[] = [];
+        const polygons: Polygon[] = [];
+
+        // Точки
+        const dt = Math.PI * 2 / count;
+        for (let i = 0; i <= Math.PI; i += dt) {
+            for (let j = 0; j < 2 * Math.PI; j += dt) {
+                points.push(new Point(
+                    a * Math.sinh(i) * Math.cos(j),
+                    c * Math.cosh(i),
+                    b * Math.cosh(i) * Math.sin(j)
+                ));
+            }
+        }
+        for (let i = 0; i <= Math.PI; i += dt) {
+            for (let j = 0; j < 2 * Math.PI; j += dt) {
+                points.push(new Point(
+                    -a * Math.sinh(i) * Math.cos(j),
+                    -c * Math.cosh(i),
+                    -b * Math.cosh(i) * Math.sin(j)
+                ));
+            }
+        }
+
+        // Ребра
+        const halfPointsLength = points.length / 2;
+        for (let i = 0; i < halfPointsLength; i++) {
+            if (i + 1 < halfPointsLength && (i + 1) % count !== 0) {
+                edges.push(new Edge(i, i + 1));
+            } else if ((i + 1) % count === 0) {
+                edges.push(new Edge(i, i + 1 - count));
+            }
+            if (i < halfPointsLength - count) {
+                edges.push(new Edge(i, i + count));
+            }
+        }
+        for (let i = halfPointsLength; i < points.length; i++) {
+            if (i + 1 < points.length && (i + 1) % count !== 0) {
+                edges.push(new Edge(i, i + 1));
+            } else if ((i + 1) % count === 0) {
+                edges.push(new Edge(i, i + 1 - count));
+            }
+            if (i < points.length - count) {
+                edges.push(new Edge(i, i + count));
+            }
+        }
+
+        // Полигоны с шахматным узором
+        for (let i = 0; i < halfPointsLength - count; i++) {
+            if (i + 1 + count < halfPointsLength && (i + 1) % count !== 0) {
+                const polygonColor = ((Math.floor(i / count) + i) % 2 === 0) ? '#00ff00' : '#0000ff';
+                polygons.push(new Polygon([i, i + 1, i + 1 + count, i + count], polygonColor));
+            }
+        }
+        for (let i = halfPointsLength; i < points.length - count; i++) {
+            if (i + 1 + count < points.length && (i + 1) % count !== 0) {
+                const polygonColor = ((Math.floor((i - halfPointsLength) / count) + i) % 2 === 0) ? '#00ff00' : '#0000ff';
+                polygons.push(new Polygon([i, i + 1, i + 1 + count, i + count], polygonColor));
+            }
+        }
+
+        super(points, edges, polygons);
+    }
+}
+
+export default twoSheetedHyperboloid;
+///////////////////////////////////////
+import { Point, Edge, Polygon, Surface } from "../entities";
+
+class twoSheetedHyperboloid extends Surface {
+    constructor(
+        count: number = 20,
+        a: number = 1,
+        b: number = 1,
+        c: number = 1, 
+    ){
+        const points: Point[] = [];
+        const edges: Edge[] = [];
+        const polygons: Polygon[] = [];
+
+        // Точки
+        const dt = Math.PI * 2 / count;
+        for (let i = 0; i <= Math.PI; i += dt) {
+            for (let j = 0; j < 2 * Math.PI; j += dt) {
+                points.push(new Point(
+                    a * Math.sinh(i) * Math.cos(j),
+                    c * Math.cosh(i),
+                    b * Math.cosh(i) * Math.sin(j)
+                ));
+            }
+        }
+        for (let i = 0; i <= Math.PI; i += dt) {
+            for (let j = 0; j < 2 * Math.PI; j += dt) {
+                points.push(new Point(
+                    -a * Math.sinh(i) * Math.cos(j),
+                    -c * Math.cosh(i),
+                    -b * Math.cosh(i) * Math.sin(j)
+                ));
+            }
+        }
+
+        // Ребра
+        const halfPointsLength = points.length / 2;
+        for (let i = 0; i < halfPointsLength; i++) {
+            if (i + 1 < halfPointsLength && (i + 1) % count !== 0) {
+                edges.push(new Edge(i, i + 1));
+            } else if ((i + 1) % count === 0) {
+                edges.push(new Edge(i, i + 1 - count));
+            }
+            if (i < halfPointsLength - count) {
+                edges.push(new Edge(i, i + count));
+            }
+        }
+        for (let i = halfPointsLength; i < points.length; i++) {
+            if (i + 1 < points.length && (i + 1) % count !== 0) {
+                edges.push(new Edge(i, i + 1));
+            } else if ((i + 1) % count === 0) {
+                edges.push(new Edge(i, i + 1 - count));
+            }
+            if (i < points.length - count) {
+                edges.push(new Edge(i, i + count));
+            }
+        }
+
+        // Полигоны с шахматным узором
+        for (let i = 0; i < halfPointsLength - count; i++) {
+            if (i + 1 + count < halfPointsLength && (i + 1) % count !== 0) {
+                const polygonColor = ((Math.floor(i / count) + i) % 2 === 0) ? '#00ff00' : '#0000ff';
+                polygons.push(new Polygon([i, i + 1, i + 1 + count, i + count], polygonColor));
+            }
+        }
+        for (let i = halfPointsLength; i < points.length - count; i++) {
+            if (i + 1 + count < points.length && (i + 1) % count !== 0) {
+                const polygonColor = ((Math.floor((i - halfPointsLength) / count) + i) % 2 === 0) ? '#00ff00' : '#0000ff';
+                polygons.push(new Polygon([i, i + 1, i + 1 + count, i + count], polygonColor));
+            }
+        }
+
+        super(points, edges, polygons);
+    }
+}
+
+export default twoSheetedHyperboloid;
+////////////////////////////////////
+
+1. **Типы данных. Числа:**
+   - В JavaScript числа могут быть целыми или с плавающей запятой.
+   - Операции с числами включают арифметические операторы (+, -, *, /), операторы инкремента и декремента (++ и --) и другие.
+  
+2. **Типы данных. Строки:**
+   - Строки в JavaScript могут быть объявлены с помощью одинарных, двойных или обратных кавычек.
+   - Для работы со строками используются различные методы, такие как length, concat, indexOf, substring и другие.
+ 
+3. **Типы данных. Массивы. Сортировка массива:**
+   - Массивы в JavaScript позволяют хранить упорядоченные коллекции элементов.
+   - Для сортировки массива можно использовать метод sort(), передавая функцию сравнения.
+ 
+4. **Типы данных. Объекты:**
+   - Объекты в JavaScript представляют собой коллекцию пар ключ-значение.
+   - Доступ к свойствам объекта осуществляется через точку или квадратные скобки.
+  
+5. **Типы данных. Функции:**
+   - Функции в JavaScript могут быть объявлены как именованные функции или анонимные функции.
+   - Функции могут принимать параметры и возвращать значения.
+ 
+6. **Boolean, null, undefined, Date, Math:**
+   - Boolean представляет логический тип со значениями true или false.
+   - null используется для обозначения отсутствия значения.
+   - undefined указывает на неопределенное значение.
+   - Date представляет дату и время.
+   - Math содержит математические методы и константы.
+ 
+7. **Таблица преобразования типов:**
+   - В JavaScript существует автоматическое преобразование типов данных во время выполнения операций.
+   - Например, строка может быть автоматически преобразована в число при выполнении математических операций.
+ 
+8. **Переменные. Объявление. Область видимости. var, let, const:**
+   - Переменные в JavaScript объявляются с помощью ключевых слов var, let или const.
+   - var имеет функциональную область видимости, в то время как let и const имеют блочную область видимости.
+ 
+9. **Арифметические операторы. Приоритет операторов:**
+   - Арифметические операторы включают сложение (+), вычитание (-), умножение (*), деление (/) и другие.
+   - Приоритет операторов определяет порядок выполнения операций.
+ 
+10. **Операторы сравнения. Логические операторы:**
+    - Операторы сравнения включают равенство (==), строгое равенство (===), неравенство (!=), строгое неравенство (!==) и другие.
+    - Логические операторы включают логическое И (&&), логическое ИЛИ (||) и логическое НЕ (!).
+ 
+11. **Операторы условного выбора. (if, switch). Условный оператор (?:):**
+    - Оператор if используется для выполнения кода при определенном условии.
+    - Оператор switch позволяет выбирать из нескольких вариантов кода для выполнения.
+    - Условный оператор (тернарный оператор) ?: представляет собой сокращенную форму условного выражения.
+ 
+12. **Циклы. (for, while, do-while, for-in):**
+    - Цикл for выполняет код определенное количество раз.
+    - Цикл while выполняет код, пока условие истинно.
+    - Цикл do-while выполняет код хотя бы один раз, затем проверяет условие.
+    - Цикл for-in используется для перебора свойств объекта или элементов массива.
+13. Итеративные циклы (forEach, map, reduce): Это методы массивов, которые позволяют выполнять операции над каждым элементом массива. forEach выполняет функцию для каждого элемента, map создает новый массив на основе результатов выполнения функции для каждого элемента, а reduce сводит массив к одному значению.
+ 
+14. Аргументы функции. Return. Коллбеки: Функции в JavaScript могут принимать аргументы, возвращать значения и использовать коллбеки (функции, передаваемые в качестве аргументов других функций).
+ 
+15. Стрелочные функции: Стрелочные функции представляют собой более краткий синтаксис для определения функций в JavaScript.
+ 
+16. Конструкторы. this. Публичные, приватные методы. Инкапсуляция: Конструкторы используются для создания объектов. Ключевое слово this используется для ссылки на текущий объект. Приватные методы и инкапсуляция могут быть реализованы с использованием замыканий.
+ 
+17. Полиморфизм. Способы реализации: Полиморфизм в ООП означает, что объекты разных классов могут быть обработаны с использованием общего интерфейса. В JavaScript полиморфизм может быть достигнут через перегрузку функций или через использование различных объектов с одинаковыми методами.
+ 
+18. Prototype. Наследование: Прототипное наследование является основой ООП в JavaScript. Каждый объект имеет ссылку на прототип, из которого он может наследовать свойства и методы.
+ 
+19. Классы. Объявление, конструктор, наследование: В стандарте ECMAScript 6 появилась поддержка классов, что позволяет использовать более привычный синтаксис ООП. Классы позволяют определять конструкторы и использовать ключевые слова extends для наследования.
+20. Замыкания: Замыкание (closure) в JavaScript возникает, когда функция имеет доступ к переменным из внешней области видимости, даже после завершения выполнения этой функции. Это позволяет функции запоминать и использовать переменные из родительской области видимости.
+ 
+21. Подключение скриптов. import from, export default: В современном JavaScript (ES6 и выше) для подключения скриптов используются инструкции import и export. import используется для импорта функций, переменных или классов из других файлов, а export default используется для экспорта значения по умолчанию из файла.
+ 
+22. Элементы DOM. Обращение, свойства и методы. (теги): DOM (Document Object Model) представляет собой структуру HTML-документа в виде объектов, которые можно манипулировать с помощью JavaScript. Обращение к элементам DOM осуществляется через методы document.getElementById, document.querySelector и другие. У элементов DOM есть свойства (например, innerHTML, textContent) и методы (например, addEventListener) для управления ими.
+ 
+23. Событийная модель в DOM: Событийная модель в DOM позволяет отслеживать и реагировать на события, происходящие в браузере. Это включает в себя добавление обработчиков событий с помощью методов addEventListener, удаление обработчиков событий с помощью removeEventListener и использование различных типов событий, таких как клик, наведение курсора и т.д.
+ 
+24. Объект window и document. Свойства и методы: Объект window представляет глобальное окно браузера, а объект document представляет текущий HTML-документ. У объекта window есть множество свойств и методов, таких как setTimeout, localStorage и другие. У объекта document также есть свойства и методы для работы с элементами DOM.
+ 
+25. Понятие фреймворка, назначения область применения: Фреймворк представляет собой набор инструментов, библиотек и шаблонов, предназначенных для упрощения разработки программного обеспечения. Фреймворки обычно ориентированы на определенную область применения, такую как веб-разработка (например, React, Angular), мобильная разработка (React Native, Flutter) или другие.
+
+26. **React. Структура проекта. Архитектурные соглашения:**
+   - В typичном React-проекте используется структура, основанная на компонентах. Каждый компонент обычно находится в своем файле.
+   - Распространенная практика - разделение компонентов по функциональности или экранам.
+   - Для управления состоянием и побочными эффектами могут использоваться библиотеки типа Redux или MobX.
+ 
+27. **React. Компонента, жизненный цикл компоненты. Метод render:**
+   - Компоненты в React - это независимые блоки, отвечающие за отображение определенной части интерфейса.
+   - У каждого компонента есть жизненный цикл, который включает в себя различные методы, такие как render, componentDidMount, componentWillUnmount и другие.
+   - Метод render используется для отображения содержимого компонента.
+ 
+28. **React. Свойства компоненты, состояние компоненты:**
+   - Свойства (props) передаются в компоненты и не могут быть изменены внутри компонента.
+   - Состояние (state) управляется самим компонентом и может изменяться в процессе работы приложения.
+ 
+29. **React. Методы componentDidMount и componentWillUnmount:**
+   - componentDidMount вызывается сразу после монтирования (отображения на странице) компонента.
+   - componentWillUnmount вызывается перед удалением компонента из DOM.
+ 
+30. **React. Контекст в классовой компоненте и управление им:**
+   - Контекст в React используется для передачи данных через дерево компонентов без необходимости передачи пропсов через каждый уровень.
+   - В классовых компонентах контекст управляется с помощью методов getChildContext, contextTypes и context.
+ 
+31. **React. Функциональные компоненты. Хуки. useState:**
+   - Функциональные компоненты позволяют писать компоненты в виде функций, без использования классов.
+   - Хуки, такие как useState, позволяют добавлять состояние в функциональные компоненты.
+ 
+32. **React. Properties:**
+   - Properties (props) в React представляют собой данные, которые передаются из родительского компонента в дочерний.
+ 
+33. **React. Хук useEffect:**
+   - Хук useEffect используется для выполнения побочных эффектов в функциональных компонентах, например, подписки на данные или изменения DOM.
+ 
+34. **React. Хуки useRef, useCallback и useMemo:**
+   - useRef используется для сохранения ссылок на DOM-элементы или другие значения между рендерами.
+   - useCallback и useMemo используются для оптимизации производительности функциональных компонентов.
+35. TypeScript (TS) поддерживает основные типы данных, такие как number (число), string (строка), boolean (логический тип), null, undefined, object, symbol, bigint, any и другие. Они используются для объявления типов переменных, параметров функций и возвращаемых значений.
+ 
+36. В TypeScript можно создавать собственные типы данных с помощью ключевого слова type. Наследование самописных типов позволяет создавать более сложные типы на основе уже существующих. Например, можно создать новый тип на основе объединения или пересечения других типов.
+ 
+37. Перечислимые типы в TypeScript представляют собой набор константных значений. Они могут быть определены с помощью ключевого слова enum или использованием типа union. Перечислимые типы удобны для работы с ограниченным набором значений.
+ 
+38. Интерфейсы в TypeScript используются для описания структуры объектов. Они могут содержать свойства, методы и индексные подписи. Наследование интерфейсов позволяет создавать более сложные интерфейсы на основе уже существующих.
+ 
+39. Дженерики (generics) в TypeScript позволяют создавать компоненты, которые могут работать с различными типами данных, не теряя информацию о типе во время компиляции. Дженерики используются для создания обобщенных структур данных и алгоритмов.
+ 
+40. В React с TypeScript можно использовать типы данных для состояний и пропсов компонентов. Например, для управления состоянием компонента используется хук useState, который позволяет указать тип данных состояния. Хук useRef используется для создания изменяемой ссылки на DOM-элемент или другое значение. Типы событий также могут быть строго определены с помощью TypeScript для обработчиков событий в React.
